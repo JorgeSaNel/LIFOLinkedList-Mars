@@ -39,6 +39,7 @@ main:
 		syscall
 		move $s1, $v0
 		move $a1, $s1
+		
 		beqz $a1, finishLoop	#Check if the number is bigger than 0
 			move $a0, $s0
 			move $a1, $s1
@@ -144,7 +145,43 @@ Push:
 #endPush
 
 #--------------------------------------------------------------#
+#node_t * remove(node_t *top, int val)
+	#node_t *new_node = top
+   	#aux = top->val
+    	#while (val != aux){
+        	#aux = new_node->val
+        	#new_node = new_node->next
+    	#}
+    	#free(new_node)
+    	#top = new_node)
+#}
+## s0 => top
+## s1 => val
 Remove:
+	# Create Pile
+	subu $sp, $sp, 32
+	sw $ra, 28($sp)
+	sw $fp, 24($sp)
+	addu $fp, $sp, 32
+	sw $s0, 0($fp)
+	sw $s1, 4($fp)
+	
+	move $s0, $a0
+	move $s1, $a1
+	lw $a0, 4($s0)
+	bne $s1, $a0, Else
+		lw $s2, 0($s0)
+		move $v0, $s2	
+	Else:
+		#TODO
+	
+	#Free pile and go back
+	lw $s0, 0($fp)
+	lw $s1, 4($fp)
+	lw $fp, 24($sp)
+	lw $ra, 28($sp)
+	addu $sp, $sp, 32
+	jr $ra
 #endRemove
 
 #--------------------------------------------------------------#
