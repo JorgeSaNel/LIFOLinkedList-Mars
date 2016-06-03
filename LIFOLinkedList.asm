@@ -32,12 +32,13 @@ main:
 	li $v0, 4
 	syscall
 	
+	li $s0, 0
 	loop:
 		#Read number
 		li $v0, 5
 		syscall
-		move $a1, $v0
-	
+		move $s1, $v0
+		move $a1, $s1
 		beqz $a1, finishLoop	#Check if the number is bigger than 0
 			move $a0, $s0
 			move $a1, $s1
@@ -71,22 +72,82 @@ main:
 		syscall
 		
 #endMain
+
 #--------------------------------------------------------------#
-
-
+## $s0 => top
+## $s1 => val
 create:
+	# Create Pile
+	subu $sp, $sp, 32
+	sw $ra, 28($sp)
+	sw $fp, 24($sp)
+	addu $fp, $sp, 32
+	sw $s0, 0($fp)
+	sw $s1, 4($fp)
+	
+	move $s0, $a0
+	move $s1, $a1
+	
+	#Call SBRK
+	la $a0, 12
+	li $v0, 9
+	syscall
+	beqz $v0, OutOfMemory
+	
+	#Save the parameters
+	sw $s0, 0($v0)
+	sw $s1, 4($v0)	
+	
+	#Free pile and go back
+	lw $s0, 0($fp)
+	lw $s1, 4($fp)
+	lw $fp, 24($sp)
+	lw $ra, 28($sp)
+	addu $sp, $sp, 32
+	jr $ra
 #endCreate
-#--------------------------------------------------------------#
 
+#--------------------------------------------------------------#
+#void push(node_t *top, int val){
+	#node_t *new_node = *top	//We create a auxNode
+	
+	#*new_node->val = val
+	#*new_node->next = *top->next
+	#*top = *new_node
+#}
+## $s0 => top
+## $s1 => val
 Push:
+	# Create Pile
+	subu $sp, $sp, 32
+	sw $ra, 28($sp)
+	sw $fp, 24($sp)
+	addu $fp, $sp, 32
+	sw $s0, 0($fp)
+	sw $s1, 4($fp)
+	
+	move $s0, $a0
+	move $s1, $a1
+	
+	#Call create method
+	move $a0, $s0
+	move $a1, $s1
+	jal create
+	
+	#Free pile and go back
+	lw $s0, 0($fp)
+	lw $s1, 4($fp)
+	lw $fp, 24($sp)
+	lw $ra, 28($sp)
+	addu $sp, $sp, 32
+	jr $ra
 #endPush
+
 #--------------------------------------------------------------#
-
-
 Remove:
 #endRemove
-#--------------------------------------------------------------#
 
+#--------------------------------------------------------------#
 #print(node_t *top){
 	#if (top->next =! null) {
 		#print(top->next);
@@ -108,13 +169,13 @@ Print:
 		jal Print
 	
 	finishPrint:
-		#Print Guion
-		li $v0, 4
-		la $a0, strGuion
-		syscall
 		#Print Number
 		lw $a0, 4($s0)
 		li $v0, 1
+		syscall
+		#Print Guion
+		li $v0, 4
+		la $a0, strGuion
 		syscall
 	#Free pile
 	lw $s0, 0($fp)
