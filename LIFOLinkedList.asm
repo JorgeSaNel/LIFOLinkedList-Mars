@@ -168,13 +168,36 @@ Remove:
 	
 	move $s0, $a0
 	move $s1, $a1
-	lw $a0, 4($s0)
-	bne $s1, $a0, Else
-		lw $s2, 0($s0)
-		move $v0, $s2	
-	Else:
-		#TODO
-	
+    
+    	move $s2, $s0          		# actual = top
+    	move $s3, $s0
+search: beqz $s2, NotFound              # if(actual == NULL) NotFound;
+             lw $t1, 4($s2)             	# $t1 = new_node->val
+             beq $t1, $s1, finishSearch    	# if(t1 == val) finishSearch;
+                move $s0, $s2                  	# $s0 = anterior
+                lw $s2, 0($s2)                  	# new_node = new_node->next
+             b search
+#When you finish the loop, in $s0 we have the prev node and in $s2 the node we want to delete
+
+      	finishSearch:
+       	lw $t0, 0($s2) # Address to the next node we want to delete.
+      	sw $t0, 0($s0) # Anterior apunta al siguiente del nodo a eliminar.
+     	# Ya nadie hace referencia al nodo apuntado por $s2.
+
+       	#Print Found
+       	la $a0, strRemove
+      	li $v0, 4
+        syscall
+        move $v0, $s0 # Devolvemos puntero al nodo eliminado
+       	b continue
+
+    	NotFound:   
+        	#Number not found
+        	la $a0, strNotRemove
+        	li $v0, 4
+        	syscall    
+        	move $v0, $s3
+       continue:   	
 	#Free pile and go back
 	lw $s0, 0($fp)
 	lw $s1, 4($fp)
